@@ -1450,6 +1450,10 @@ input, select, textarea, .btn, .badge, .tabs, .tab, .msg {
                 <input type="number" id="e_total_boletos" min="1" max="10000">
               </div>
               <div class="field">
+                <label for="e_min_boletos">Mínimo de boletos</label>
+                <input type="number" id="e_min_boletos" min="1" max="10000">
+              </div>
+              <div class="field">
                 <label for="e_fecha">Fecha del sorteo</label>
                 <input type="datetime-local" id="e_fecha">
               </div>
@@ -2129,9 +2133,8 @@ async function cargarConfigParaEditar() {
     document.getElementById('e_titulo').value = conf.titulo || ''
     document.getElementById('e_desc').value = conf.descripcion || ''
     document.getElementById('e_precio').value = conf.precio || ''
-
-    document.getElementById('e_total_boletos').value =
-      conf.total_boletos || 10000
+    document.getElementById('e_total_boletos').value = conf.total_boletos || 10000
+    document.getElementById('e_min_boletos').value = conf.min_boletos || 1
 
     if (conf.fecha_sorteo) {
       const dt = new Date(conf.fecha_sorteo)
@@ -2197,6 +2200,25 @@ fd.append(
   'total_boletos',
   totalBoletos
 )
+
+const minBoletos =
+  parseInt(
+    document.getElementById('e_min_boletos').value,
+    10
+  ) || 1
+
+if (minBoletos < 1 || minBoletos > totalBoletos) {
+  showMsg(
+    'msgEditar',
+    'La cantidad mínima debe estar entre 1 y el total de boletos',
+    'error'
+  )
+
+  setBtn(btn, false, 'Guardar cambios')
+  return
+}
+
+fd.append('min_boletos', minBoletos)
 
 if (precio) {
   fd.append('precio', precio)

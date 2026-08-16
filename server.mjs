@@ -683,17 +683,19 @@ app.patch(
       const fecha       = sanitizeString(req.body.fecha_sorteo, 50) || null
       const precio      = sanitizeNumber(req.body.precio) || null
       const totalBoletos = sanitizeInt(req.body.total_boletos) || null
+      const tieneMinBoletos = req.body.min_boletos !== undefined
 
-        if (
+                if (
           !titulo &&
           !descripcion &&
           !fecha &&
           !precio &&
-          !totalBoletos
+          !totalBoletos &&
+          !tieneMinBoletos &&
+          !req.file
         ) {
           return sendError(res, 400, 'Nada que actualizar')
         }
-
                     const cambios = {}
 
               if (titulo) cambios.titulo = titulo
@@ -742,6 +744,53 @@ app.patch(
 
                 cambios.total_boletos = totalBoletos
               }
+              if (tieneMinBoletos) {
+  const minBoletos = sanitizeInt(req.body.min_boletos)
+
+  if (!minBoletos || minBoletos < 1) {
+    return sendError(
+      res,
+      400,
+      'La cantidad mínima debe ser al menos 1 boleto'
+    )
+  }
+
+  // Usar el total nuevo si se está modificando,
+  // o el total actual de la rifa si no se modifica.
+  const { data: configActual, error: configError } = await supabase
+    .from('configuracion')
+    .select('total_boletos')
+    .eq('id', id)
+    .single()
+
+  if (configError || !configActual) {
+    return sendError(res, 404, 'Rifa no encontrada')
+  }
+
+  const totalFinal = totalBoletos || configActual.total_boletos
+
+  const { count: vendidos, error: countError } = await supabase
+    .from('boletos')
+    .select('*', {
+      count: 'exact',
+      head: true
+    })
+    .eq('config_id', id)
+
+  if (countError) throw countError
+
+  const disponibles = totalFinal - (vendidos || 0)
+
+  if (minBoletos > disponibles) {
+    return sendError(
+      res,
+      400,
+      `La cantidad mínima no puede superar los ${disponibles} boletos disponibles`
+    )
+  }
+
+  cambios.min_boletos = minBoletos
+}
       if (req.file) {
       const fileError = validarArchivo(req.file, res)
       if (fileError) return fileError

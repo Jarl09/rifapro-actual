@@ -744,7 +744,7 @@ app.patch(
 
                 cambios.total_boletos = totalBoletos
               }
-              if (tieneMinBoletos) {
+             if (tieneMinBoletos) {
   const minBoletos = sanitizeInt(req.body.min_boletos)
 
   if (!minBoletos || minBoletos < 1) {

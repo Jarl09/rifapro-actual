@@ -94,7 +94,7 @@ const { data:compras }=await supabase
 .eq('config_id',configActual.id)
 .order('created_at',{ascending:false})
 
-if(!compras||compras.length===0){
+if(!comprasTelefono||comprasTelefono.length===0){
 return{estado:'no_encontrado'}
 }
 
@@ -153,7 +153,7 @@ const { data:compras }=await supabase
 .ilike('telefono',`%${entrada}%`)
 .order('created_at',{ascending:false})
 
-if(!compras||compras.length===0){
+if(!comprasTelefono||comprasTelefono.length===0){
 return{
 estado:'no_encontrado'
 }
